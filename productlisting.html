@@ -38,27 +38,25 @@
             <div class="products-grid" id="productsContainer">
                 {% for product in products %}
                 <div class="product-listing-card" data-category="{{ product.category }}">
-                    <a href="{{ url_for('product_details', product_id=product.id) }}">
-                        <div class="product-image-container">
-                            <img src="{{ url_for('static', filename='images/' + product.image) }}"
-                                 alt="{{ product.name }}"
-                                 class="product-image"
-                                 onerror="this.src='{{ url_for('static', filename='images/placeholder.jpg') }}'">
-                            <div class="stock-indicator {% if product.stock > 20 %}in-stock{% elif product.stock > 0 %}low-stock{% else %}out-of-stock{% endif %}">
-                                {% if product.stock > 20 %}
-                                    In Stock ({{ product.stock }})
-                                {% elif product.stock > 0 %}
-                                    Low Stock ({{ product.stock }})
-                                {% else %}
-                                    Out of Stock
-                                {% endif %}
-                            </div>
+                    <div class="product-image-container" onclick="viewDetails('{{ product.id }}')">
+                        <img src="{{ url_for('static', filename='images/' + product.image) }}"
+                             alt="{{ product.name }}"
+                             class="product-image"
+                             onerror="this.src='{{ url_for('static', filename='images/placeholder.jpg') }}'">
+                        <div class="stock-indicator {% if product.stock > 20 %}in-stock{% elif product.stock > 0 %}low-stock{% else %}out-of-stock{% endif %}">
+                            {% if product.stock > 20 %}
+                                In Stock ({{ product.stock }})
+                            {% elif product.stock > 0 %}
+                                Low Stock ({{ product.stock }})
+                            {% else %}
+                                Out of Stock
+                            {% endif %}
                         </div>
-                    </a>
+                    </div>
 
                     <div class="product-info">
                         <div class="product-category">{{ product.category }}</div>
-                        <h3 class="product-name"><a href="{{ url_for('product_details', product_id=product.id) }}">{{ product.name }}</a></h3>
+                        <h3 class="product-name" onclick="viewDetails('{{ product.id }}')">{{ product.name }}</h3>
                         <div class="product-rating">
                             <div class="stars">
                                 {% for i in range(5) %}
@@ -86,7 +84,87 @@
         </div>
     </section>
 
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Product Details</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Product details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
     <script>
+        function viewDetails(productId) {
+            const product = {{ products | tojson | safe }}.find(p => p.id === productId);
+            if (!product) return;
+
+            const modal = document.getElementById('productModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+
+            modalTitle.textContent = product.name;
+
+            let benefitsHTML = '<ul>';
+            product.benefits.forEach(benefit => {
+                benefitsHTML += `<li>${benefit}</li>`;
+            });
+            benefitsHTML += '</ul>';
+
+            modalBody.innerHTML = `
+                <div class="modal-product-detail">
+                    <div class="modal-product-image">
+                        <img src="{{ url_for('static', filename='images/') }}${product.image}" alt="${product.name}">
+                        ${product.lab_tested ? '<div class="lab-tested-badge">✓ Lab Tested</div>' : ''}
+                    </div>
+                    <div class="modal-product-info">
+                        <div class="product-category">${product.category}</div>
+                        <div class="product-rating">
+                            <div class="stars">
+                                ${'⭐'.repeat(Math.floor(product.rating))}${'☆'.repeat(5-Math.floor(product.rating))}
+                                <span class="rating-text">(${product.rating})</span>
+                            </div>
+                        </div>
+                        <div class="price-section">
+                            <span class="price">Rp ${product.price.toLocaleString('id-ID', {minimumFractionDigits: 2})}</span>
+                        </div>
+                        <div class="stock-info">
+                            <strong>Stock:</strong> ${product.stock} units available
+                        </div>
+                        <div class="dosage-info">
+                            <strong>Dosage:</strong> ${product.dosage}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-sections">
+                    <div class="modal-section">
+                        <h3>Description</h3>
+                        <p>${product.description}</p>
+                    </div>
+                    <div class="modal-section">
+                        <h3>Benefits</h3>
+                        ${benefitsHTML}
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn-primary" onclick="addToCart('${product.id}')" ${product.stock === 0 ? 'disabled' : ''}>
+                            ${product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('productModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
         function addToCart(productId) {
             alert(`Product ${productId} added to cart!`);
         }
