@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SawitPRO - {{ product.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{{ url_for('home') }}" class="logo">
+                <div class="logo-icon">🌱</div>
+                SawitPRO
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('home') }}#home">Home</a></li>
+                <li><a href="{{ url_for('home') }}#api-demo">API Demo</a></li>
+                <li><a href="{{ url_for('product_listing') }}" class="active">Products</a></li>
+                <li><a href="{{ url_for('home') }}#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="product-details">
+        <div class="container">
+            <div class="product-detail-card">
+                <div class="product-detail-image">
+                    <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}">
+                </div>
+                <div class="product-detail-info">
+                    <h1>{{ product.name }}</h1>
+                    <div class="product-rating">
+                        <div class="stars">
+                            {% for i in range(5) %}
+                                {% if i < product.rating|int %}
+                                    ⭐
+                                {% else %}
+                                    ☆
+                                {% endif %}
+                            {% endfor %}
+                            <span class="rating-text">({{ product.rating }})</span>
+                        </div>
+                    </div>
+                    <div class="price-section">
+                        <span class="price">Rp {{ "{:,.2f}".format(product.price) }}</span>
+                    </div>
+                    <div class="stock-info">
+                        <strong>Stock:</strong>
+                        {% if product.stock > 20 %}
+                            In Stock ({{ product.stock }})
+                        {% elif product.stock > 0 %}
+                            Low Stock ({{ product.stock }})
+                        {% else %}
+                            Out of Stock
+                        {% endif %}
+                    </div>
+                    <div class="dosage-info">
+                        <strong>Dosage:</strong> {{ product.dosage }}
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-primary" onclick="addToCart('{{ product.id }}')" {% if product.stock == 0 %}disabled{% endif %}>
+                            {% if product.stock > 0 %}Add to Cart{% else %}Out of Stock{% endif %}
+                        </button>
+                        <button class="btn-secondary" onclick="contactSeller()">Contact Seller</button>
+                    </div>
+                </div>
+            </div>
+            <div class="product-description">
+                <h3>Description</h3>
+                <p>{{ product.description }}</p>
+            </div>
+            <div class="product-benefits">
+                <h3>Benefits</h3>
+                <ul>
+                    {% for benefit in product.benefits %}
+                    <li>{{ benefit }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="recommended-products">
+                <h3>Recommended Products</h3>
+                <div class="products-grid">
+                    <!-- Example of recommended products -->
+                    {% for recommended_product in products|shuffle|slice(4) %}
+                    <div class="product-listing-card">
+                        <a href="{{ url_for('product_details', product_id=recommended_product.id) }}">
+                            <div class="product-image-container">
+                                <img src="{{ url_for('static', filename='images/' + recommended_product.image) }}"
+                                     alt="{{ recommended_product.name }}"
+                                     class="product-image"
+                                     onerror="this.src='{{ url_for('static', filename='images/placeholder.jpg') }}'">
+                            </div>
+                        </a>
+                        <div class="product-info">
+                            <h3 class="product-name"><a href="{{ url_for('product_details', product_id=recommended_product.id) }}">{{ recommended_product.name }}</a></h3>
+                            <div class="price-section">
+                                <span class="price">Rp {{ "{:,.2f}".format(recommended_product.price) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function addToCart(productId) {
+            alert(`Product ${productId} added to cart!`);
+        }
+
+        function contactSeller() {
+            alert("Contacting seller...");
+        }
+    </script>
+</body>
+</html>
